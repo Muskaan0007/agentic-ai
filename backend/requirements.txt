@@ -1,0 +1,8 @@
+django>=4.2,<5.0
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+python-dotenv
+groq
+duckduckgo-search>=6.0.0
+chromadb>=0.5.0
