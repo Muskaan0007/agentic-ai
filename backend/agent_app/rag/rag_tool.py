@@ -1,5 +1,5 @@
 import chromadb
-from langchain.tools import tool
+# from langchain.tools import tool
 from pathlib import Path
 
 
@@ -50,7 +50,7 @@ def _get_collection():
     return _collection
 
 
-@tool
+
 def document_search(query: str) -> str:
     """Search internal company documents and knowledge base. Use for policy, product, or internal questions."""
     try:
