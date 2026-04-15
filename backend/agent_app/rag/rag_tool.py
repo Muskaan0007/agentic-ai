@@ -2,9 +2,7 @@ import chromadb
 from langchain.tools import tool
 from pathlib import Path
 
-# ---------------------------------------------------------------------------
-# Offline hash-based embedding — zero network, zero model download.
-# ---------------------------------------------------------------------------
+
 class _HashEmbedding:
     def name(self) -> str:
         return "hash-embedding"
@@ -20,11 +18,8 @@ class _HashEmbedding:
         return results
 
 
-# ---------------------------------------------------------------------------
-# Lazy initialization — only load ChromaDB when first query comes in
-# This prevents memory crash on startup
-# ---------------------------------------------------------------------------
 _collection = None
+
 
 def _get_collection():
     global _collection
@@ -72,7 +67,6 @@ def document_search(query: str) -> str:
 
 
 def add_documents(texts: list, ids: list = None):
-    """Add documents to the ChromaDB 'docs' collection."""
     col = _get_collection()
     if col is None:
         return
