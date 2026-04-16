@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import UserProfile, CompanyDocument
 from .agent.agent import run_agent
-from .rag.rag_tool import add_documents
+
 
 
 # ─── Simple GET endpoint (no auth) ──────────────────────────────────────────
@@ -50,35 +50,50 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
+        try:
+            username = request.data.get("username")
+            password = request.data.get("password")
 
-        if not all([username, password]):
+            if not username or not password:
+                return Response(
+                    {"error": "Username and password required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            user = User.objects.filter(username=username).first()
+
+            if not user or not user.check_password(password):
+                return Response(
+                    {"error": "Invalid credentials"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            # JWT
+            refresh = RefreshToken.for_user(user)
+
+            # SAFE ROLE FETCH (NO CRASH EVER)
+            profile = UserProfile.objects.filter(user=user).first()
+            role = profile.role if profile else "user"
+
             return Response(
-                {"error": "Username and password are required."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                    "user": {
+                        "id": user.id,
+                        "username": user.username,
+                        "email": user.email,
+                        "role": role,
+                    },
+                },
+                status=status.HTTP_200_OK,
             )
 
-        user = User.objects.filter(username=username).first()
-        if not user or not user.check_password(password):
-            return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        refresh = RefreshToken.for_user(user)
-        return Response(
-            {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "role": user.profile.role,
-                },
-            },
-            status=status.HTTP_200_OK,
-        )
-
-
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -91,13 +106,40 @@ class AgentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        query = request.data.get("query", "").strip()
-        if not query:
-            return Response({"error": "Query is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # 1. GET QUERY SAFELY
+            query = request.data.get("query", None)
 
-        session_id = str(request.user.id)
-        answer = run_agent(query, session_id=session_id)
-        return Response({"answer": answer}, status=status.HTTP_200_OK)
+            if not query:
+                return Response(
+                    {"error": "Missing 'query' in request body"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            query = query.strip()
+
+            # 2. SAFE USER HANDLING
+            if not request.user or not request.user.is_authenticated:
+                return Response(
+                    {"error": "User not authenticated"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            session_id = str(request.user.id)
+
+            # 3. RUN AGENT
+            answer = run_agent(query, session_id=session_id)
+
+            return Response(
+                {"answer": answer},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": "Agent crashed", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # ─── Document Upload ─────────────────────────────────────────────────────────
