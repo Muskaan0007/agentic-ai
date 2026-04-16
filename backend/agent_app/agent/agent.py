@@ -29,7 +29,7 @@ def _pick_tool(query: str) -> tuple[str, str]:
         return "get_datetime", get_datetime(query)
     if any(t in q for t in WEB_TRIGGERS):
         return "web_search", web_search(query)
-    return "document_search", document_search.invoke({"query": query})
+    return "document_search", document_search(query)
 
 
 def run_agent(query: str, session_id: str = "default") -> str:

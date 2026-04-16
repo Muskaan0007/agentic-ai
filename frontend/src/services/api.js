@@ -10,12 +10,14 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-export const register = (data) => API.post("/api/register/", data);
-export const login = (data) => API.post("/api/login/", data);
+export const register = (data) => API.post("/register/", data);
+export const login = (data) => API.post("/login/", data);
 export const logout = () => API.post("/logout/");
-export const askAgent = (query) => API.post("/api/agent/", { query });
+export const askAgent = (query) => API.post("/agent/", { query });
 export const uploadDoc = (formData) =>
-  API.post("/api/upload/", formData, { headers: { "Content-Type": "multipart/form-data" } });
-export const getUsers = () => API.get("/api/users/");
+  API.post("/upload/", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+export const getUsers = () => API.get("/users/");
 
 export default API;
