@@ -101,7 +101,7 @@ export default function Chat() {
         </div>
         <nav style={styles.nav}>
           <a href="/chat" style={styles.navItem}>💬 Chat</a>
-          <a href="/upload" style={styles.navItem}>📄 Upload Docs</a>
+          {/* <a href="/upload" style={styles.navItem}>📄 Upload Docs</a> */}
           {user?.role === "admin" && <a href="/users" style={styles.navItem}>👥 Users</a>}
         </nav>
         <button className="btn btn-danger" style={{ margin: "auto 16px 24px", width: "calc(100% - 32px)" }} onClick={handleLogout}>
